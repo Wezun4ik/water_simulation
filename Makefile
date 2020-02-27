@@ -1,6 +1,6 @@
 # VULKAN_SDK_PATH = /home/ilya/vulkan/1.1.130.0/x86_64
 
-CFLAGS = -std=c++17 -Wall -Wextra -Werror
+CFLAGS = -std=c++17 -Wall -Wextra -Werror -lSDL2
 # LDFLAGS = -L$(VULKAN_SDK_PATH)/lib `pkg-config --static --libs glfw3` -lvulkan
 NAME = terrain
 
