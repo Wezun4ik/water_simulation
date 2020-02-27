@@ -39,7 +39,7 @@ void	SDL_stuff::render_texture(int *buf)
 	}
 }
 
-SDL_stuff::SDL_stuff()
+SDL_stuff::SDL_stuff(std::string heightmap_path): map(heightmap_path)
 {
 	if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
 		std::cerr << "could not initialize sdl2: " << SDL_GetError() << std::endl;
@@ -71,11 +71,76 @@ SDL_stuff::~SDL_stuff()
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
+	for (size_t i = 0; i < this->map.height; ++i)
+		delete this->map.data[i];
+	delete this->map.data;
 }
 
-int		main()
+heightmap::heightmap(const std::string& map_file_path)
 {
-	SDL_stuff		stuff;
+	std::ifstream fout;
+	std::vector<int> 	temp;
+	fout.open(map_file_path);
+	if (fout.is_open())
+	{
+		size_t		height = 0;
+		for (;fout.good(); ++height)
+		{
+			std::string		print;
+			getline(fout, print);
+			if (print.empty())
+			{
+				--height;
+				continue;
+			}
+			std::istringstream	ss(print);
+			size_t width = 0;
+			for (;ss.good(); ++width)
+			{
+				int		integer = 0;
+				if (!(ss >> integer))
+					break;
+				temp.push_back(integer);
+			}
+			if (this->width == 0)
+				this->width = width;
+			else if (this->width != 0 && this->width != width)
+			{
+				std::exception	exc;
+				throw (exc);
+			}
+		}
+		this->height = height;
+		std::cout << this->height << " " << this->width << std::endl;
+		for (size_t i = 0; i < height; ++i)
+		{
+			for (size_t k = 0; k < width; ++k)
+			{
+				std::cout << std::setw(3);
+				std::cout << temp[width * i + k] << " ";
+			}
+			std::cout << std::endl;
+		}
+		this->data = new int*[height];
+		for (size_t i = 0; i < height; ++i)
+		{
+			this->data[i] = new int[width];
+			for (size_t k = 0; k < width; ++k)
+				this->data[i][k] = temp[width * i + k];
+		}
+	}
+}
+
+int		main(int argc, char** argv)
+{
+	if (argc != 2)
+	{
+		std::cout << "There should be one argument: path to the heightmap" << std::endl;
+		return (0);
+	}
+
+	std::string		file(argv[1]);
+	SDL_stuff		stuff(file);
 	stuff.run();
 	return (0);
 }
