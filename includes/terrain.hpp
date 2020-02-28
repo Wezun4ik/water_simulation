@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iomanip>
 
 const int width = 800;
 const int height = 800;
