@@ -1,8 +1,10 @@
 #pragma once
 
 #include <iostream>
-#include <SDL2/SDL.h>
-#undef main
+// #include <GL/gl3w.h> for future
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <exception>
 #include <fstream>
 #include <string>
@@ -10,8 +12,8 @@
 #include <sstream>
 #include <iomanip>
 
-const int width = 800;
-const int height = 800;
+const int width = 1024;
+const int height = 720;
 const double pov = 3.1415 / 3.0;
 
 struct	point
@@ -54,21 +56,22 @@ private:
 	size_t		vertex_count;
 };
 
-class SDL_stuff
+class OPENGL_stuff
 {
 public:
-			SDL_stuff(std::string heightmap_path);
-			~SDL_stuff();
-	char*	return_pixels();
-	void	run();
-
+	OPENGL_stuff(std::string heightmap_path);
+	~OPENGL_stuff();
+	void			run();
 private:
-	SDL_Window*		window;
+	heightmap		map;
+	GLFWwindow*		window = NULL;
+	GLFWwindow*		create_window();
+	// void			framebuffer_size_callback(GLFWwindow* window, int width, int height);
+/*private:
 	SDL_Surface*	default_screen;
 	SDL_Renderer*	renderer;
 	SDL_Texture*	texture;
 	void			render_texture(int* ret);
 	camera			cam;
-	heightmap		map;
-	vertex_buffer	buf;
+	vertex_buffer	buf;*/
 };
