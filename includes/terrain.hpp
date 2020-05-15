@@ -5,6 +5,9 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <exception>
 #include <fstream>
 #include <string>
@@ -18,10 +21,10 @@ const double pov = 3.1415 / 3.0;
 
 struct	point
 {
-	float	x = 0.0;
-	float	y = 0.0;
-	float	z = 0.0;
-	float	w = 1.0;
+	GLfloat	x = 0.0;
+	GLfloat	y = 0.0;
+	GLfloat	z = 0.0;
+	GLfloat	w = 1.0;
 };
 
 class camera
@@ -50,10 +53,12 @@ struct heightmap
 class vertex_buffer
 {
 public:
-	// vertex_buffer(const heightmap& map);
-private:
-	vertex*		vertex_list;
+	vertex_buffer(int **map, int width, int height);
+	GLfloat*	vertex_list;
 	size_t		vertex_count;
+private:
+	void		form_triangles(GLfloat midpoint, int i, int j, int start, int** map);
+	void		form_single_triangle(point& one, point& two, point& three, GLfloat* where);
 };
 
 class OPENGL_stuff
@@ -66,6 +71,10 @@ private:
 	heightmap		map;
 	GLFWwindow*		window = NULL;
 	GLFWwindow*		create_window();
+	vertex_buffer	buffer;
+	GLuint			shader_program;
+	GLuint			VBO;
+	GLuint			VAO;
 	// void			framebuffer_size_callback(GLFWwindow* window, int width, int height);
 /*private:
 	SDL_Surface*	default_screen;
