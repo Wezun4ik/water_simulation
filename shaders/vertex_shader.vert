@@ -3,11 +3,13 @@
 layout (location = 0) in vec3 position;
 
 uniform float water_level;
+uniform mat4 camera;
 out vec4 vertex_color;
 
 void main()
 {
 	gl_Position = vec4(position.x / 120.0 - 0.8, position.y / 120.0 - 0.5, position.z / 100.0, 1.0);
+	gl_Position = camera * gl_Position;
 	if (position.z / 12.0 < water_level)
 		vertex_color = vec4(0.0, 0.0, max(position.z / 15.0 * 2.0, 0.1), 1.0);
 	else if (position.z / 15.0 < 0.70)

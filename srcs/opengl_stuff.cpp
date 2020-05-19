@@ -65,23 +65,19 @@ void			framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
-void			key_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-	(void)scancode;
-	(void)mods;
-	(void)window;
-
-	static float last_time = glfwGetTime();
-
-	float current_time = glfwGetTime();
-	float delta = current_time - last_time;
-	(void)delta;
-	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-		if (key == GLFW_KEY_ESCAPE)
-			glfwSetWindowShouldClose(window, GLFW_TRUE);
-	}
+void	camera_class::compute_camera_matrix() {
+	cam_matrix = glm::lookAt(position, position + direction, upper_dir);
 }
 
-OPENGL_stuff::OPENGL_stuff(std::string heightmap_path): map(heightmap_path), buffer(map.data, map.width, map.height) {
+camera_class::camera_class() {
+	direction = glm::vec3(0.0f, 0.0f, -1.0f);
+	right_dir = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), direction));
+	upper_dir = glm::normalize(glm::cross(direction, right_dir));
+	position = glm::vec3(0.0f, 0.0f, 1.0f);
+	compute_camera_matrix();
+}
+
+OPENGL_stuff::OPENGL_stuff(std::string heightmap_path): map(heightmap_path), buffer(map.data, map.width, map.height), camera() {
 
 	glfwInit();
 
@@ -172,8 +168,12 @@ void			OPENGL_stuff::run() {
 		GLfloat	time_value = glfwGetTime();
 		GLfloat water_level = (sin(time_value * 3) / 2) + 0.5;
 		glUseProgram(shader_program);
+
 		GLint	vertex_water_level_location = glGetUniformLocation(shader_program, "water_level");
 		glUniform1f(vertex_water_level_location, water_level);
+
+		GLint	camera_matrix_location = glGetUniformLocation(shader_program, "camera");
+		glUniformMatrix4fv(camera_matrix_location, 1, GL_FALSE, &camera.cam_matrix[0][0]);
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, buffer.vertex_count * 3);
 		glBindVertexArray(0);

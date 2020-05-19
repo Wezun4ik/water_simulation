@@ -27,11 +27,17 @@ struct	point
 	GLfloat	w = 1.0;
 };
 
-class camera
+class camera_class
 {
-	point	one;
-	point	two;
-	point	three;
+public:
+	glm::vec3	direction;
+	glm::vec3	upper_dir;
+	glm::vec3	right_dir;
+	glm::vec3	position;
+	glm::mat4x4	cam_matrix;
+	camera_class();
+	void	compute_camera_matrix();
+private:
 };
 
 struct vertex
@@ -83,4 +89,8 @@ private:
 	void			render_texture(int* ret);
 	camera			cam;
 	vertex_buffer	buf;*/
+public:
+	camera_class	camera;
 };
+
+void			key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
