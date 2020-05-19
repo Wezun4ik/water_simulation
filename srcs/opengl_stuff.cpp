@@ -168,7 +168,12 @@ void			OPENGL_stuff::run() {
 		glfwPollEvents();
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		GLfloat	time_value = glfwGetTime();
+		GLfloat water_level = (sin(time_value * 3) / 2) + 0.5;
 		glUseProgram(shader_program);
+		GLint	vertex_water_level_location = glGetUniformLocation(shader_program, "water_level");
+		glUniform1f(vertex_water_level_location, water_level);
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, buffer.vertex_count * 3);
 		glBindVertexArray(0);
