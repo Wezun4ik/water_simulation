@@ -36,8 +36,11 @@ public:
 	glm::vec3	position;
 	glm::mat4x4	cam_matrix;
 	glm::mat4x4	projection;
+	GLfloat		yaw;
+	GLfloat		pitch;
 	camera_class(int right, int up);
 	void	compute_camera_matrix();
+	void	update_right_and_upper();
 private:
 };
 
@@ -95,8 +98,11 @@ private:
 	camera			cam;
 	vertex_buffer	buf;*/
 public:
+	bool			pressed_button = 0;
 	camera_class	camera;
 	GLfloat			water_level;
 };
 
-void			key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void				key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void				mouse_callback(GLFWwindow *window, int key, int action, int mods);
+void				move_callback(GLFWwindow* window, double xpos, double ypos);

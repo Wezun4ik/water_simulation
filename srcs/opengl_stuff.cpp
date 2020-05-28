@@ -66,16 +66,22 @@ void			framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void	camera_class::compute_camera_matrix() {
+	update_right_and_upper();
 	cam_matrix = glm::lookAt(position, position + direction, upper_dir);
+}
+
+void	camera_class::update_right_and_upper() {
+	right_dir = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), direction));
+	upper_dir = glm::normalize(glm::cross(direction, right_dir));
 }
 
 camera_class::camera_class(int right, int up) {
 	direction = glm::vec3(0.0f, 0.0f, -1.0f);
-	right_dir = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), direction));
-	upper_dir = glm::normalize(glm::cross(direction, right_dir));
 	position = glm::vec3(float(right) / 2.0f, float(up) / 2.0f, 200.0f);
+	yaw = -90.0f;
+	pitch = 0.0f;
 	compute_camera_matrix();
-	projection = glm::perspective(glm::radians(45.0f), float(width) / (float)height, 0.1f, 1000.0f);
+	projection = glm::perspective(glm::radians(80.0f), float(width) / (float)height, 0.1f, 1000.0f);
 }
 
 GLuint	OPENGL_stuff::create_shader_program(std::string vertex_shader_src, std::string fragment_shader_src) {
@@ -140,6 +146,8 @@ OPENGL_stuff::OPENGL_stuff(std::string heightmap_path): map(heightmap_path), buf
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_callback);
+	glfwSetCursorPosCallback(window, move_callback);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -165,8 +173,16 @@ OPENGL_stuff::OPENGL_stuff(std::string heightmap_path): map(heightmap_path), buf
 	glGenBuffers(1, &WATER_VBO);
 	glBindVertexArray(WATER_VAO);
 
+	auto null_map = new int*[map.height];
+	for (int i = 0; i < map.height; ++i) {
+		null_map[i] = new int[(map.width)];
+		for (int j = 0; j < map.width; ++j) {
+			null_map[i][j] = 0;
+		}
+	}
+	auto water_buffer = vertex_buffer(null_map, int(map.width), int(map.height));
 	glBindBuffer(GL_ARRAY_BUFFER, WATER_VBO);
-	glBufferData(GL_ARRAY_BUFFER, buffer.vertex_count * 3 * 3 * sizeof(GLfloat), buffer.vertex_list, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, water_buffer.vertex_count * 3 * 3 * sizeof(GLfloat), water_buffer.vertex_list, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);

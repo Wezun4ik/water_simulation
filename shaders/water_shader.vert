@@ -13,7 +13,7 @@ void main()
 {
 	// gl_Position = vec4(position.x / 120.0 - 0.8, position.y / 120.0 - 0.5, position.z / 100.0, 1.0);
 	gl_Position = projection * camera * vec4(vec2(position.xy), position.z + water_level * 50.0 - 5.0, 1.0);
-	vertex_color = vec4(1.0, 0.0, 0.0, 0.212);
+	vertex_color = vec4(0.0, 0.0, 1.0, water_level * 1.5);
 	// if (position.z / DIVIDE <= water_level)
 	// 	vertex_color = vec4(0.0, 0.0, clamp(0.1, position.z / DIVIDE * 2.0, 1.0), 1.0);
 	// else if (position.z / DIVIDE < 0.70)
