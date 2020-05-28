@@ -69,15 +69,57 @@ void	camera_class::compute_camera_matrix() {
 	cam_matrix = glm::lookAt(position, position + direction, upper_dir);
 }
 
-camera_class::camera_class() {
+camera_class::camera_class(int right, int up) {
 	direction = glm::vec3(0.0f, 0.0f, -1.0f);
 	right_dir = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), direction));
 	upper_dir = glm::normalize(glm::cross(direction, right_dir));
-	position = glm::vec3(0.0f, 0.0f, 1.0f);
+	position = glm::vec3(float(right) / 2.0f, float(up) / 2.0f, 200.0f);
 	compute_camera_matrix();
+	projection = glm::perspective(glm::radians(45.0f), float(width) / (float)height, 0.1f, 1000.0f);
 }
 
-OPENGL_stuff::OPENGL_stuff(std::string heightmap_path): map(heightmap_path), buffer(map.data, map.width, map.height), camera() {
+GLuint	OPENGL_stuff::create_shader_program(std::string vertex_shader_src, std::string fragment_shader_src) {
+	std::ifstream ifs(vertex_shader_src);
+	std::string		content( (std::istreambuf_iterator<char>(ifs)),
+							 (std::istreambuf_iterator<char>()));
+	GLuint			vertex_shader;
+	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	auto			content_pointer = content.data();
+	glShaderSource(vertex_shader, 1, &content_pointer, NULL);
+	glCompileShader(vertex_shader);
+	GLint		success;
+	GLchar		infoLog[512];
+	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(vertex_shader, 512, NULL, infoLog);
+		std::cout << "COMPILATION FAILED!\n" << infoLog << std::endl;
+	}
+	GLuint			fragment_shader;
+	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+	std::ifstream ifs_frag(fragment_shader_src);
+	std::string		content_frag( (std::istreambuf_iterator<char>(ifs_frag)),
+							 (std::istreambuf_iterator<char>()));
+	auto			content_frag_pointer = content_frag.data();
+	glShaderSource(fragment_shader, 1, &content_frag_pointer, NULL);
+	glCompileShader(fragment_shader);
+	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+	if (!success) {
+		glGetShaderInfoLog(vertex_shader, 512, NULL, infoLog);
+		std::cout << "COMPILATION FAILED!\n" << infoLog << std::endl;
+	}
+	auto new_shader_program = glCreateProgram();
+	glAttachShader(new_shader_program, vertex_shader);
+	glAttachShader(new_shader_program, fragment_shader);
+	glLinkProgram(new_shader_program);
+	glGetProgramiv(new_shader_program, GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(new_shader_program, 512, NULL, infoLog);
+		std::cout << "PROGRAM LINK FAILED\n" << infoLog << std::endl;
+	}
+	return (new_shader_program);
+}
+
+OPENGL_stuff::OPENGL_stuff(std::string heightmap_path): map(heightmap_path), buffer(map.data, map.width, map.height), camera(map.width, map.height) {
 
 	glfwInit();
 
@@ -99,45 +141,14 @@ OPENGL_stuff::OPENGL_stuff(std::string heightmap_path): map(heightmap_path), buf
 
 	glfwSetKeyCallback(window, key_callback);
 
-	glEnable(GL_DEPTH);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glDisable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	std::ifstream ifs("shaders/vertex_shader.vert");
-	std::string		content( (std::istreambuf_iterator<char>(ifs)),
-							 (std::istreambuf_iterator<char>()));
-	GLuint			vertex_shader;
-	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	auto			content_pointer = content.data();
-	glShaderSource(vertex_shader, 1, &content_pointer, NULL);
-	glCompileShader(vertex_shader);
-	GLint		success;
-	GLchar		infoLog[512];
-	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(vertex_shader, 512, NULL, infoLog);
-		std::cout << "COMPILATION FAILED!\n" << infoLog << std::endl;
-	}
-	GLuint			fragment_shader;
-	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	std::ifstream ifs_frag("shaders/fragment_shader.frag");
-	std::string		content_frag( (std::istreambuf_iterator<char>(ifs_frag)),
-							 (std::istreambuf_iterator<char>()));
-	auto			content_frag_pointer = content_frag.data();
-	glShaderSource(fragment_shader, 1, &content_frag_pointer, NULL);
-	glCompileShader(fragment_shader);
-	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-	if (!success) {
-		glGetShaderInfoLog(vertex_shader, 512, NULL, infoLog);
-		std::cout << "COMPILATION FAILED!\n" << infoLog << std::endl;
-	}
-	shader_program = glCreateProgram();
-	glAttachShader(shader_program, vertex_shader);
-	glAttachShader(shader_program, fragment_shader);
-	glLinkProgram(shader_program);
-	glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
-	if (!success) {
-		glGetProgramInfoLog(shader_program, 512, NULL, infoLog);
-		std::cout << "PROGRAM LINK FAILED\n" << infoLog << std::endl;
-	}
+	shader_program = create_shader_program("shaders/vertex_shader.vert", "shaders/fragment_shader.frag");
+
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glBindVertexArray(VAO);
@@ -145,14 +156,22 @@ OPENGL_stuff::OPENGL_stuff(std::string heightmap_path): map(heightmap_path), buf
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, buffer.vertex_count * 3 * 3 * sizeof(GLfloat), buffer.vertex_list, GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
-	glUseProgram(shader_program);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, buffer.vertex_count * 9 * sizeof(GLfloat), buffer.vertex_list, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, buffer.vertex_count, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(0);
 	glBindVertexArray(0);
+
+	water_program = create_shader_program("shaders/water_shader.vert", "shaders/water_shader.frag");
+
+	glGenVertexArrays(1, &WATER_VAO);
+	glGenBuffers(1, &WATER_VBO);
+	glBindVertexArray(WATER_VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, WATER_VBO);
+	glBufferData(GL_ARRAY_BUFFER, buffer.vertex_count * 3 * 3 * sizeof(GLfloat), buffer.vertex_list, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+
+	water_level = 0.0;
 }
 
 OPENGL_stuff::~OPENGL_stuff() {
@@ -163,20 +182,40 @@ void			OPENGL_stuff::run() {
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		GLfloat	time_value = glfwGetTime();
-		GLfloat water_level = (sin(time_value * 3) / 2) + 0.5;
+		// GLfloat	time_value = glfwGetTime();
+		// water_level = (sin(time_value * 3) / 2) + 0.5;
 		glUseProgram(shader_program);
 
 		GLint	vertex_water_level_location = glGetUniformLocation(shader_program, "water_level");
 		glUniform1f(vertex_water_level_location, water_level);
 
+		GLint	projection_matrix = glGetUniformLocation(shader_program, "projection");
+		glUniformMatrix4fv(projection_matrix, 1, GL_FALSE, &camera.projection[0][0]);
+
 		GLint	camera_matrix_location = glGetUniformLocation(shader_program, "camera");
 		glUniformMatrix4fv(camera_matrix_location, 1, GL_FALSE, &camera.cam_matrix[0][0]);
+
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, buffer.vertex_count * 3);
 		glBindVertexArray(0);
+
+		glUseProgram(water_program);
+
+		vertex_water_level_location = glGetUniformLocation(water_program, "water_level");
+		glUniform1f(vertex_water_level_location, water_level);
+
+		projection_matrix = glGetUniformLocation(water_program, "projection");
+		glUniformMatrix4fv(projection_matrix, 1, GL_FALSE, &camera.projection[0][0]);
+
+		camera_matrix_location = glGetUniformLocation(water_program, "camera");
+		glUniformMatrix4fv(camera_matrix_location, 1, GL_FALSE, &camera.cam_matrix[0][0]);
+
+		glBindVertexArray(WATER_VAO);
+		glDrawArrays(GL_TRIANGLES, 0, buffer.vertex_count * 3);
+		glBindVertexArray(0);
+
 		glfwSwapBuffers(window);
 	}
 	glfwTerminate();

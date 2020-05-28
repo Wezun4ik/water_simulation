@@ -12,7 +12,7 @@ void			key_callback(GLFWwindow *window, int key, int scancode, int action, int m
 	float current_time = glfwGetTime();
 	float delta = current_time - last_time;
 	(void)delta;
-	GLfloat cam_speed = 0.05f;
+	GLfloat cam_speed = 5.5f;
 	if (g_opengl_stuff == nullptr)
 		return ;
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -24,8 +24,16 @@ void			key_callback(GLFWwindow *window, int key, int scancode, int action, int m
 			g_opengl_stuff->camera.position -= cam_speed * g_opengl_stuff->camera.right_dir;
 		if (key == GLFW_KEY_D)
 			g_opengl_stuff->camera.position += cam_speed * g_opengl_stuff->camera.right_dir;
+		if (key == GLFW_KEY_Q)
+			g_opengl_stuff->camera.position -= cam_speed * g_opengl_stuff->camera.upper_dir;
+		if (key == GLFW_KEY_E)
+			g_opengl_stuff->camera.position += cam_speed * g_opengl_stuff->camera.upper_dir;
 		if (key == GLFW_KEY_ESCAPE)
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
+		if (key == GLFW_KEY_EQUAL)
+			g_opengl_stuff->water_level = std::min(1.0f, g_opengl_stuff->water_level + 0.05f);
+		if (key == GLFW_KEY_MINUS)
+			g_opengl_stuff->water_level = std::max(0.0f, g_opengl_stuff->water_level - 0.05f);
 	}
 	g_opengl_stuff->camera.compute_camera_matrix();
 }

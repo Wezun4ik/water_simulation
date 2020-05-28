@@ -35,7 +35,8 @@ public:
 	glm::vec3	right_dir;
 	glm::vec3	position;
 	glm::mat4x4	cam_matrix;
-	camera_class();
+	glm::mat4x4	projection;
+	camera_class(int right, int up);
 	void	compute_camera_matrix();
 private:
 };
@@ -73,14 +74,18 @@ public:
 	OPENGL_stuff(std::string heightmap_path);
 	~OPENGL_stuff();
 	void			run();
+	GLuint			create_shader_program(std::string vertex_shader_src, std::string fragment_shader_src);
 private:
 	heightmap		map;
 	GLFWwindow*		window = NULL;
 	GLFWwindow*		create_window();
 	vertex_buffer	buffer;
 	GLuint			shader_program;
+	GLuint			water_program;
 	GLuint			VBO;
 	GLuint			VAO;
+	GLuint			WATER_VBO;
+	GLuint			WATER_VAO;
 	// void			framebuffer_size_callback(GLFWwindow* window, int width, int height);
 /*private:
 	SDL_Surface*	default_screen;
@@ -91,6 +96,7 @@ private:
 	vertex_buffer	buf;*/
 public:
 	camera_class	camera;
+	GLfloat			water_level;
 };
 
 void			key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
