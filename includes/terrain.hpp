@@ -14,6 +14,7 @@
 #include <vector>
 #include <sstream>
 #include <iomanip>
+#include <opencv2/opencv.hpp>
 
 const int width = 1024;
 const int height = 720;
