@@ -91,7 +91,7 @@ int		main(int argc, char** argv)
 {
 
 	ensure_arguments(argc);
-	cv::Mat		image = cv::imread(argv[argc - 1], CV_LOAD_IMAGE_COLOR);
+	cv::Mat		image = cv::imread(argv[argc - 1], cv::IMREAD_UNCHANGED);
 	std::string		file(argv[1]);
 	try {
 		OPENGL_stuff		stuff(file);
