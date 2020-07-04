@@ -1,5 +1,15 @@
 #include "terrain.hpp"
 
+// void			vertex_buffer::form_triangles(GLfloat midpoint, int i, int j, int start, int** map) {
+// 	auto		upper_left_corner = (GLfloat)map[i][j];
+// 	auto		upper_right_corner = (GLfloat)map[i][j + 1];
+// 	auto		down_left_corner = (GLfloat)map[i + 1][j];
+// 	auto		down_right_corner = (GLfloat)map[i + 1][j + 1];
+// 	auto		upper_middle_point = (upper_left_corner + upper_right_corner) / 2.0f;
+// 	auto		left_middle_point =
+
+// }
+
 void			vertex_buffer::form_single_triangle(point& one, point& two, point& three, GLfloat* where) {
 	where[0] = one.x;
 	where[1] = one.y;
@@ -28,6 +38,15 @@ vertex_buffer::vertex_buffer(int** map, int map_width, int map_height) {
 	int			count = 0;
 	for (int i = 0; i + 1 < map_height; ++i) {
 		for (int j = 0; j + 1 < map_width; ++j) {
+
+			//
+			// FLOWER METHOD
+			// GLfloat		midpoint = GLfloat(map[i][j]) + GLfloat(map[i + 1][j]) + GLfloat(map[i][j + 1]) + GLfloat(map[i + 1][j + 1]);
+			// midpoint /= 4.0f;
+			// form_triangles(midpoint, i, j, (width * i + j) * 72, map);
+			//FLOWER METHOD ENDS
+			//
+
 			form_triangles((GLfloat)map_height, i, j, count * 18, map);
 			count++;
 		}
